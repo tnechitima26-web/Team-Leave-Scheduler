@@ -1,5 +1,11 @@
 var builder = WebApplication.CreateBuilder(args);
 
+using Microsoft.EntityFrameworkCore;
+using LeaveScheduler.Api.Data;
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("Data Source=scheduler.db"));
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
