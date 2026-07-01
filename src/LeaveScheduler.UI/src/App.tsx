@@ -1,122 +1,121 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
-function App() {
-  const [count, setCount] = useState(0)
+const API_BASE = "http://localhost:5117/api/leave";
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+interface LeaveRequest {
+  id: number;
+  employeeId: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  employee?: { name: string; team: string };
 }
 
-export default App
+function App() {
+  const [calendar, setCalendar] = useState<LeaveRequest[]>([]);
+  const [pending, setPending] = useState<LeaveRequest[]>([]);
+  const [message, setMessage] = useState("");
+
+  const [newReq, setNewReq] = useState({ employeeId: 1, startDate: '', endDate: '' });
+
+  // Load data from the Backend
+  const fetchData = async () => {
+    try {
+      const calRes = await axios.get(`${API_BASE}/calendar`);
+      const pendRes = await axios.get(`${API_BASE}/pending`);
+      setCalendar(calRes.data);
+      setPending(pendRes.data);
+    } catch (err) {
+      console.error("Error fetching data", err);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const submitRequest = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    await axios.post(`${API_BASE}/request`, newReq);
+    setMessage("Request submitted!");
+    fetchData();
+  } catch (err: any) {
+    alert(err.response?.data?.message || "Error submitting request");
+  }
+};
+
+  const handleStatus = async (id: number, status: string) => {
+    try {
+      await axios.post(`${API_BASE}/${id}/status`, `"${status}"`, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      setMessage(`Request ${status}!`);
+      fetchData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Error updating status");
+    }
+  };
+
+  return (
+    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+      <h1>Team Leave Scheduler</h1>
+      {message && <p style={{ color: 'green', fontWeight: 'bold' }}>{message}</p>}
+
+      <form onSubmit={submitRequest} style={{ marginBottom: '30px', padding: '15px', background: '#f9f9f9' }}>
+  <h3>Submit New Request</h3>
+  Employee ID: <input type="number" value={newReq.employeeId} onChange={e => setNewReq({...newReq, employeeId: parseInt(e.target.value)})} />
+  Start: <input type="date" onChange={e => setNewReq({...newReq, startDate: e.target.value})} />
+  End: <input type="date" onChange={e => setNewReq({...newReq, endDate: e.target.value})} />
+  <button type="submit">Submit Request</button>
+</form>
+
+      <section>
+        <h2>Approved Leave (Next 30 Days)</h2>
+        <table border={1} cellPadding={10} style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f2f2f2' }}>
+              <th>Employee</th>
+              <th>Team</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {calendar.length === 0 ? <tr><td colSpan={4}>No approved leave yet.</td></tr> : 
+              calendar.map(req => (
+                <tr key={req.id}>
+                  <td>{req.employee?.name}</td>
+                  <td>{req.employee?.team}</td>
+                  <td>{new Date(req.startDate).toLocaleDateString()}</td>
+                  <td>{new Date(req.endDate).toLocaleDateString()}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <section style={{ marginTop: '40px' }}>
+        <h2>Pending Requests (Manager Queue)</h2>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {pending.length === 0 ? <p>No pending requests.</p> : 
+            pending.map(req => (
+              <div key={req.id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
+                <strong>{req.employee?.name}</strong> ({req.employee?.team})<br/>
+                {new Date(req.startDate).toLocaleDateString()} to {new Date(req.endDate).toLocaleDateString()}
+                <div style={{ marginTop: '10px' }}>
+                  <button onClick={() => handleStatus(req.id, "Approved")} style={{ backgroundColor: 'green', color: 'white', marginRight: '5px' }}>Approve</button>
+                  <button onClick={() => handleStatus(req.id, "Rejected")} style={{ backgroundColor: 'red', color: 'white' }}>Reject</button>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+    </div>
+  );
+}
+
+
+
+export default App;
