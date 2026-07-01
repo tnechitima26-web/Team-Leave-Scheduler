@@ -1,6 +1,7 @@
 // 1. ALL "using" statements MUST be here at the top
 using Microsoft.EntityFrameworkCore;
 using LeaveScheduler.Api.Data;
+using LeaveScheduler.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,8 @@ builder.Services.AddSwaggerGen();
 // This is the Database connection we added in Commit 2
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=scheduler.db"));
+
+builder.Services.AddScoped<LeaveService>();
 
 var app = builder.Build();
 
