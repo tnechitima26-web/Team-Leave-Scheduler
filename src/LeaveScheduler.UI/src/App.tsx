@@ -17,7 +17,11 @@ function App() {
   const [pending, setPending] = useState<LeaveRequest[]>([]);
   const [message, setMessage] = useState("");
 
-  const [newReq, setNewReq] = useState({ employeeId: 1, startDate: '', endDate: '' });
+  const [newReq, setNewReq] = useState({ 
+    employeeId: 1, 
+    startDate: '2026-08-07', 
+    endDate: '2026-08-12' 
+});
 
   // Load data from the Backend
   const fetchData = async () => {
@@ -86,8 +90,8 @@ function App() {
                 <tr key={req.id}>
                   <td>{req.employee?.name}</td>
                   <td>{req.employee?.team}</td>
-                  <td>{new Date(req.startDate).toLocaleDateString()}</td>
-                  <td>{new Date(req.endDate).toLocaleDateString()}</td>
+                  <td>{new Date(req.startDate).toLocaleDateString('en-GB')}</td>
+                  <td>{new Date(req.endDate).toLocaleDateString('en-GB')}</td>
                 </tr>
               ))
             }
@@ -102,7 +106,7 @@ function App() {
             pending.map(req => (
               <div key={req.id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
                 <strong>{req.employee?.name}</strong> ({req.employee?.team})<br/>
-                {new Date(req.startDate).toLocaleDateString()} to {new Date(req.endDate).toLocaleDateString()}
+                {new Date(req.startDate).toLocaleDateString('en-GB')} to {new Date(req.endDate).toLocaleDateString('en-GB')}
                 <div style={{ marginTop: '10px' }}>
                   <button onClick={() => handleStatus(req.id, "Approved")} style={{ backgroundColor: 'green', color: 'white', marginRight: '5px' }}>Approve</button>
                   <button onClick={() => handleStatus(req.id, "Rejected")} style={{ backgroundColor: 'red', color: 'white' }}>Reject</button>

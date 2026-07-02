@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed the database
+// 1. Seed the database (Keep this here)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -34,15 +34,16 @@ using (var scope = app.Services.CreateScope())
     DbInitializer.Initialize(context);
 }
 
-// Configure the HTTP request pipeline.
+// 2. Configure Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// 3. THIS ORDER IS CRITICAL:
 app.UseHttpsRedirection();
-app.UseCors("AllowAll"); // Enable the CORS policy
+app.UseCors("AllowAll"); // Move this right here, BEFORE app.MapGet/MapPost
 
 // --- API ENDPOINTS ---
 
