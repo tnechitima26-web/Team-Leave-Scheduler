@@ -19,8 +19,8 @@ function App() {
 
   const [newReq, setNewReq] = useState({ 
     employeeId: 1, 
-    startDate: '2026-08-07', 
-    endDate: '2026-08-12' 
+    startDate: '2026-07-10', // Friday
+    endDate: '2026-07-15'   // Wednesday
 });
 
   // Load data from the Backend
